@@ -6,6 +6,8 @@ import {
     DRACOLoader
 } from 'three/examples/jsm/loaders/DRACOLoader';
 
+import { sortByName } from './utils'
+
 export default function initGLTF(scene, gltf) {
     return new Promise((resolve, reject) => {
 
@@ -20,14 +22,8 @@ export default function initGLTF(scene, gltf) {
                     const root = data.scene;
                     scene.add(root);
                     const objects = root.children;
-                    function compare(a, b) {
-                        if (a.name.substring(0, 5) < b.name.substring(0, 5))
-                            return -1;
-                        if (a.name.substring(0, 5) > b.name.substring(0, 5))
-                            return 1;
-                        return 0;
-                    }
-                    objects.sort(compare);
+                    sortByName(objects);
+                    console.log(objects);
                     resolve(objects);
                 },
                 xhr => {
