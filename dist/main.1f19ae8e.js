@@ -53596,6 +53596,18 @@ var _OutlinePass = require("three/examples/jsm/postprocessing/OutlinePass.js");
 
 var _FXAAShader = require("three/examples/jsm/shaders/FXAAShader.js");
 
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 var createPostProcessing = function createPostProcessing(renderer, scene, camera) {
   var size = renderer.getDrawingBufferSize(new _three.Vector2()); // create EffectComposer to add post processing effects to
 
@@ -53607,25 +53619,41 @@ var createPostProcessing = function createPostProcessing(renderer, scene, camera
   var outlinePass = new _OutlinePass.OutlinePass(new _three.Vector2(size.width, size.height), scene, camera);
   outlinePass.edgeStrength = 5;
   outlinePass.edgeThickness = 1;
-  outlinePass.edgeGlow = 0.25; //outlinePass.visibleEdgeColor.set('#EBEBEB');
-  //outlinePass.hiddenEdgeColor.set('#525252');
-  //composer.addPass(outlinePass);
-  // shader pass for anitaliasing as the regular one is applied before the postprocessing
-  //const fxaaShader = new ShaderPass(FXAAShader);
-  //composer.addPass(fxaaShader);
-  //fxaaShader.renderToScreen = true
+  outlinePass.edgeGlow = 0.25;
+  outlinePass.visibleEdgeColor.set('#EBEBEB');
+  outlinePass.hiddenEdgeColor.set('#525252');
+  composer.addPass(outlinePass); // shader pass for anitaliasing as the regular one is applied before the postprocessing
 
+  var fxaaShader = new _ShaderPass.ShaderPass(_FXAAShader.FXAAShader);
+  composer.addPass(fxaaShader);
+  fxaaShader.renderToScreen = true;
   return {
     renderComposer: function renderComposer() {
       composer.render(scene, camera);
     },
     resizeComposer: function resizeComposer(width, height) {
-      composer.setSize(width, height, false); //fxaaShader.uniforms['resolution'].value.set(1 / width, 1 / height);
+      composer.setSize(width, height, false);
+      fxaaShader.uniforms['resolution'].value.set(1 / width, 1 / height);
     },
-    showOutlines: function showOutlines(objects) {
-      outlinePass.selectedObjects = objects;
+    showOutline: function showOutline(obj) {
+      outlinePass.selectedObjects.push(obj);
     },
-    hideOutlines: function hideOutlines() {
+    showOutlines: function showOutlines(objs) {
+      var _outlinePass$selected;
+
+      (_outlinePass$selected = outlinePass.selectedObjects).push.apply(_outlinePass$selected, _toConsumableArray(objs));
+    },
+    hideOutline: function hideOutline(obj) {
+      outlinePass.selectedObjects = outlinePass.selectedObjects.filter(function (x) {
+        return x !== obj;
+      });
+    },
+    hideOutlines: function hideOutlines(objs) {
+      outlinePass.selectedObjects = outlinePass.selectedObjects.filter(function (x) {
+        return !objs.includes(x);
+      });
+    },
+    clearOutlines: function clearOutlines() {
       outlinePass.selectedObjects = [];
     }
   };
@@ -53663,7 +53691,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
 var createViewport = /*#__PURE__*/function () {
   var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(canvas, hdr, model) {
-    var renderer, camera, controls, scene, resizeRenderer, renderRequested, render, requestRender;
+    var renderer, scene, camera, controls, p, resizeRenderer, renderRequested, render, requestRender;
     return regeneratorRuntime.wrap(function _callee2$(_context2) {
       while (1) {
         switch (_context2.prev = _context2.next) {
@@ -53684,8 +53712,9 @@ var createViewport = /*#__PURE__*/function () {
                 camera.updateProjectionMatrix();
               }
 
-              controls.update();
-              renderer.render(scene, camera);
+              controls.update(); //renderer.render(scene, camera) for use without postprocessing
+
+              p.renderComposer();
             };
 
             resizeRenderer = function _resizeRenderer(renderer) {
@@ -53696,6 +53725,7 @@ var createViewport = /*#__PURE__*/function () {
 
               if (needResize) {
                 renderer.setSize(width, height, false);
+                p.resizeComposer(width, height);
               }
 
               return needResize;
@@ -53710,17 +53740,18 @@ var createViewport = /*#__PURE__*/function () {
             renderer.toneMappingExposure = 1; //brightness
 
             renderer.outputEncoding = THREE.sRGBEncoding;
+            scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, 2, 0.1, 50);
             camera.position.set(5, 5, 5);
             controls = new _OrbitControls.OrbitControls(camera, canvas);
             controls.enableDamping = true;
             controls.target.set(0, 0, 0);
             controls.update();
-            scene = new THREE.Scene();
             _context2.next = 16;
             return (0, _hdrLoader.default)(renderer, scene, hdr);
 
           case 16:
+            p = (0, _postProcessing.default)(renderer, scene, camera);
             renderRequested = false;
             controls.addEventListener('change', requestRender);
             window.addEventListener('resize', requestRender);
@@ -53748,10 +53779,72 @@ var createViewport = /*#__PURE__*/function () {
                     }
                   }, _callee);
                 }))();
+              },
+              isVisible: function isVisible(obj) {
+                return obj.layers.mask === 1 ? true : false;
+              },
+
+              /**
+               * two versions of every function so the number of render requests is minimized 
+               */
+              showObject: function showObject(obj) {
+                obj.layers.set(0);
+                obj.children.forEach(function (x) {
+                  return x.layers.set(0);
+                });
+                requestRender();
+              },
+              showObjects: function showObjects(objs) {
+                objs.forEach(function (x) {
+                  x.layers.set(0);
+                  x.children.forEach(function (y) {
+                    y.layers.set(0);
+                  });
+                });
+                requestRender();
+              },
+              hideObject: function hideObject(obj) {
+                obj.layers.set(1);
+                obj.children.forEach(function (x) {
+                  return x.layers.set(1);
+                });
+                requestRender();
+              },
+              hideObjects: function hideObjects(objs) {
+                objs.forEach(function (x) {
+                  x.layers.set(1);
+                  x.children.forEach(function (y) {
+                    y.layers.set(1);
+                  });
+                });
+                requestRender();
+              },
+
+              /**
+               * copy functions of postProcessing.js to add render requests to them
+               */
+              showOutline: function showOutline(obj) {
+                p.showOutline(obj);
+                requestRender();
+              },
+              showOutlines: function showOutlines(objs) {
+                p.showOutlines(objs);
+                requestRender();
+              },
+              hideOutline: function hideOutline(obj) {
+                p.hideOutline(obj);
+                requestRender();
+              },
+              hideOutlines: function hideOutlines(objs) {
+                p.hideOutlines(objs);
+                requestRender();
+              },
+              clearOutlines: function clearOutlines() {
+                p.clearOutlines(), requestRender();
               }
             });
 
-          case 21:
+          case 22:
           case "end":
             return _context2.stop();
         }
@@ -53852,7 +53945,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51073" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51857" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

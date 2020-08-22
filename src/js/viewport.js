@@ -16,6 +16,8 @@ const createViewport = async (canvas, hdr, model) => {
     renderer.toneMappingExposure = 1 //brightness
     renderer.outputEncoding = THREE.sRGBEncoding
 
+    const scene = new THREE.Scene()
+
     const camera = new THREE.PerspectiveCamera(75, 2, 0.1, 50)
     camera.position.set(5, 5, 5)
 
@@ -24,9 +26,9 @@ const createViewport = async (canvas, hdr, model) => {
     controls.target.set(0, 0, 0)
     controls.update()
 
-    const scene = new THREE.Scene()
-
     await loadHDR(renderer, scene, hdr)
+
+    const p = createPostProcessing(renderer, scene, camera)
 
     function resizeRenderer(renderer) {
         const pixelRatio = window.devicePixelRatio
@@ -35,6 +37,7 @@ const createViewport = async (canvas, hdr, model) => {
         const needResize = canvas.width !== width || canvas.height !== height
         if (needResize) {
             renderer.setSize(width, height, false)
+            p.resizeComposer(width, height)
         }
         return needResize
     }
@@ -51,7 +54,8 @@ const createViewport = async (canvas, hdr, model) => {
         }
 
         controls.update()
-        renderer.render(scene, camera)
+        //renderer.render(scene, camera) for use without postprocessing
+        p.renderComposer()
     }
 
     function requestRender() {
@@ -71,6 +75,63 @@ const createViewport = async (canvas, hdr, model) => {
             const objects = await loadGLTF(scene, model)
             requestRender()
             return objects
+        },
+        isVisible(obj) {
+            return obj.layers.mask === 1 ? true : false
+        },
+        /**
+         * two versions of every function so the number of render requests is minimized 
+         */
+        showObject(obj) {
+            obj.layers.set(0)
+            obj.children.forEach(x => x.layers.set(0))
+            requestRender()
+        },
+        showObjects(objs) {
+            objs.forEach(x => {
+                x.layers.set(0)
+                x.children.forEach(y => {
+                    y.layers.set(0)
+                })
+            })
+            requestRender()
+        },
+        hideObject(obj) {
+            obj.layers.set(1)
+            obj.children.forEach(x => x.layers.set(1))
+            requestRender()
+        },
+        hideObjects(objs) {
+            objs.forEach(x => {
+                x.layers.set(1)
+                x.children.forEach(y => {
+                    y.layers.set(1)
+                })
+            })
+            requestRender()
+        },
+        /**
+         * copy functions of postProcessing.js to add render requests to them
+         */
+        showOutline(obj) {
+            p.showOutline(obj)
+            requestRender()
+        },
+        showOutlines(objs) {
+            p.showOutlines(objs)
+            requestRender()
+        },
+        hideOutline(obj) {
+            p.hideOutline(obj)
+            requestRender()
+        },
+        hideOutlines(objs) {
+            p.hideOutlines(objs)
+            requestRender()
+        },
+        clearOutlines() {
+            p.clearOutlines(),
+            requestRender()
         }
     }
 }
