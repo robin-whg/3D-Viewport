@@ -21,7 +21,6 @@ import {
 } from 'three/examples/jsm/shaders/FXAAShader.js';
 
 const createPostProcessing = (renderer, scene, camera) => {
-    const p = {};
     const size = renderer.getDrawingBufferSize(new Vector2());
     // create EffectComposer to add post processing effects to
     const composer = new EffectComposer(renderer);

@@ -53597,7 +53597,6 @@ var _OutlinePass = require("three/examples/jsm/postprocessing/OutlinePass.js");
 var _FXAAShader = require("three/examples/jsm/shaders/FXAAShader.js");
 
 var createPostProcessing = function createPostProcessing(renderer, scene, camera) {
-  var p = {};
   var size = renderer.getDrawingBufferSize(new _three.Vector2()); // create EffectComposer to add post processing effects to
 
   var composer = new _EffectComposer.EffectComposer(renderer); // create RenderPass to render scene for passing it to the effects
@@ -53890,7 +53889,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55397" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51504" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
