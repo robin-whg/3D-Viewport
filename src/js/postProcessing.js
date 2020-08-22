@@ -32,12 +32,13 @@ const createPostProcessing = (renderer, scene, camera) => {
     outlinePass.edgeStrength = 5;
     outlinePass.edgeThickness = 1;
     outlinePass.edgeGlow = 0.25;
-    outlinePass.visibleEdgeColor.set('#EBEBEB');
-    outlinePass.hiddenEdgeColor.set('#525252');
-    composer.addPass(outlinePass);
+    //outlinePass.visibleEdgeColor.set('#EBEBEB');
+    //outlinePass.hiddenEdgeColor.set('#525252');
+    //composer.addPass(outlinePass);
     // shader pass for anitaliasing as the regular one is applied before the postprocessing
-    const fxaaShader = new ShaderPass(FXAAShader);
-    composer.addPass(fxaaShader);
+    //const fxaaShader = new ShaderPass(FXAAShader);
+    //composer.addPass(fxaaShader);
+    //fxaaShader.renderToScreen = true
 
     return {
         renderComposer: () => {
@@ -45,7 +46,7 @@ const createPostProcessing = (renderer, scene, camera) => {
         },
         resizeComposer: (width, height) => {
             composer.setSize(width, height, false);
-            fxaaShader.uniforms['resolution'].value.set(1 / width, 1 / height);
+            //fxaaShader.uniforms['resolution'].value.set(1 / width, 1 / height);
         },
         showOutlines: (objects) => {
             outlinePass.selectedObjects = objects;

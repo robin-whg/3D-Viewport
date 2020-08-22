@@ -8,7 +8,7 @@ import {
 
 import { sortByName } from './utils'
 
-export default function initGLTF(scene, gltf) {
+export default function loadGLTF(scene, gltf) {
     return new Promise((resolve, reject) => {
 
         const dracoLoader = new DRACOLoader();
@@ -27,7 +27,7 @@ export default function initGLTF(scene, gltf) {
                     resolve(objects);
                 },
                 xhr => {
-                    console.log(`Scene ${Math.floor( xhr.loaded / xhr.total * 100 )}% loaded`);
+                    console.log(`Model ${Math.floor( xhr.loaded / xhr.total * 100 )}% loaded`);
                 },
                 err => {
                     reject(new Error(err));

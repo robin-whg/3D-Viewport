@@ -49502,21 +49502,21 @@ RGBELoader.prototype = Object.assign(Object.create(_threeModule.DataTextureLoade
     return _threeModule.DataTextureLoader.prototype.load.call(this, url, onLoadCallback, onProgress, onError);
   }
 });
-},{"../../../build/three.module.js":"../node_modules/three/build/three.module.js"}],"js/rgbeLoader.js":[function(require,module,exports) {
+},{"../../../build/three.module.js":"../node_modules/three/build/three.module.js"}],"js/hdrLoader.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = initRGBE;
+exports.default = loadHDR;
 
 var _three = require("three");
 
 var _RGBELoader = require("three/examples/jsm/loaders/RGBELoader");
 
-function initRGBE(renderer, scene, rgbe) {
+function loadHDR(renderer, scene, hdr) {
   return new Promise(function (resolve, reject) {
-    new _RGBELoader.RGBELoader().setDataType(_three.UnsignedByteType).load(rgbe, function (texture) {
+    new _RGBELoader.RGBELoader().setDataType(_three.UnsignedByteType).load(hdr, function (texture) {
       var pmremGenerator = new _three.PMREMGenerator(renderer);
       pmremGenerator.compileEquirectangularShader();
       var envMap = pmremGenerator.fromEquirectangular(texture).texture;
@@ -52531,7 +52531,7 @@ exports.sortByName = sortByName;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = initGLTF;
+exports.default = loadGLTF;
 
 var _GLTFLoader = require("three/examples/jsm/loaders/GLTFLoader");
 
@@ -52539,7 +52539,7 @@ var _DRACOLoader = require("three/examples/jsm/loaders/DRACOLoader");
 
 var _utils = require("./utils");
 
-function initGLTF(scene, gltf) {
+function loadGLTF(scene, gltf) {
   return new Promise(function (resolve, reject) {
     var dracoLoader = new _DRACOLoader.DRACOLoader();
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
@@ -52551,7 +52551,7 @@ function initGLTF(scene, gltf) {
       console.log(objects);
       resolve(objects);
     }, function (xhr) {
-      console.log("Scene ".concat(Math.floor(xhr.loaded / xhr.total * 100), "% loaded"));
+      console.log("Model ".concat(Math.floor(xhr.loaded / xhr.total * 100), "% loaded"));
     }, function (err) {
       reject(new Error(err));
     });
@@ -53607,20 +53607,20 @@ var createPostProcessing = function createPostProcessing(renderer, scene, camera
   var outlinePass = new _OutlinePass.OutlinePass(new _three.Vector2(size.width, size.height), scene, camera);
   outlinePass.edgeStrength = 5;
   outlinePass.edgeThickness = 1;
-  outlinePass.edgeGlow = 0.25;
-  outlinePass.visibleEdgeColor.set('#EBEBEB');
-  outlinePass.hiddenEdgeColor.set('#525252');
-  composer.addPass(outlinePass); // shader pass for anitaliasing as the regular one is applied before the postprocessing
+  outlinePass.edgeGlow = 0.25; //outlinePass.visibleEdgeColor.set('#EBEBEB');
+  //outlinePass.hiddenEdgeColor.set('#525252');
+  //composer.addPass(outlinePass);
+  // shader pass for anitaliasing as the regular one is applied before the postprocessing
+  //const fxaaShader = new ShaderPass(FXAAShader);
+  //composer.addPass(fxaaShader);
+  //fxaaShader.renderToScreen = true
 
-  var fxaaShader = new _ShaderPass.ShaderPass(_FXAAShader.FXAAShader);
-  composer.addPass(fxaaShader);
   return {
     renderComposer: function renderComposer() {
       composer.render(scene, camera);
     },
     resizeComposer: function resizeComposer(width, height) {
-      composer.setSize(width, height, false);
-      fxaaShader.uniforms['resolution'].value.set(1 / width, 1 / height);
+      composer.setSize(width, height, false); //fxaaShader.uniforms['resolution'].value.set(1 / width, 1 / height);
     },
     showOutlines: function showOutlines(objects) {
       outlinePass.selectedObjects = objects;
@@ -53645,7 +53645,7 @@ var THREE = _interopRequireWildcard(require("three"));
 
 var _OrbitControls = require("three/examples/jsm/controls/OrbitControls");
 
-var _rgbeLoader = _interopRequireDefault(require("./rgbeLoader"));
+var _hdrLoader = _interopRequireDefault(require("./hdrLoader"));
 
 var _gltfLoader = _interopRequireDefault(require("./gltfLoader"));
 
@@ -53661,149 +53661,112 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-var createViewport = function createViewport(canvas, rgbe, model) {
-  var v = {};
-  v.init = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-    var objects;
-    return regeneratorRuntime.wrap(function _callee$(_context) {
+var createViewport = /*#__PURE__*/function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(canvas, hdr, model) {
+    var renderer, camera, controls, scene, resizeRenderer, renderRequested, render, requestRender;
+    return regeneratorRuntime.wrap(function _callee2$(_context2) {
       while (1) {
-        switch (_context.prev = _context.next) {
+        switch (_context2.prev = _context2.next) {
           case 0:
-            //create WebGLRenderer to actually render something to the passed HTML canvas element
-            v.renderer = new THREE.WebGLRenderer({
+            requestRender = function _requestRender() {
+              if (!renderRequested) {
+                renderRequested = true;
+                requestAnimationFrame(render);
+              }
+            };
+
+            render = function _render() {
+              renderRequested = undefined;
+
+              if (resizeRenderer(renderer)) {
+                var _canvas = renderer.domElement;
+                camera.aspect = _canvas.clientWidth / _canvas.clientHeight;
+                camera.updateProjectionMatrix();
+              }
+
+              controls.update();
+              renderer.render(scene, camera);
+            };
+
+            resizeRenderer = function _resizeRenderer(renderer) {
+              var pixelRatio = window.devicePixelRatio;
+              var width = canvas.clientWidth * pixelRatio | 0;
+              var height = canvas.clientHeight * pixelRatio | 0;
+              var needResize = canvas.width !== width || canvas.height !== height;
+
+              if (needResize) {
+                renderer.setSize(width, height, false);
+              }
+
+              return needResize;
+            };
+
+            renderer = new THREE.WebGLRenderer({
               canvas: canvas,
-              alpha: true,
-              antialias: true
+              antialias: true,
+              alpha: true
             });
-            v.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            v.renderer.toneMappingExposure = 4; //'brightness'
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1; //brightness
 
-            v.renderer.outputEncoding = THREE.sRGBEncoding; //create a scene for the renderer to display (gets passed to it in render function)
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            camera = new THREE.PerspectiveCamera(75, 2, 0.1, 50);
+            camera.position.set(5, 5, 5);
+            controls = new _OrbitControls.OrbitControls(camera, canvas);
+            controls.enableDamping = true;
+            controls.target.set(0, 0, 0);
+            controls.update();
+            scene = new THREE.Scene();
+            _context2.next = 16;
+            return (0, _hdrLoader.default)(renderer, scene, hdr);
 
-            v.scene = new THREE.Scene();
-            v.camera = new THREE.PerspectiveCamera(75, 2, 0.1, 50);
-            v.camera.position.set(5, 5, 5); //OrbitControls rotate camera around a set pivot point
+          case 16:
+            renderRequested = false;
+            controls.addEventListener('change', requestRender);
+            window.addEventListener('resize', requestRender);
+            requestRender();
+            return _context2.abrupt("return", {
+              loadModel: function loadModel(model) {
+                return _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+                  var objects;
+                  return regeneratorRuntime.wrap(function _callee$(_context) {
+                    while (1) {
+                      switch (_context.prev = _context.next) {
+                        case 0:
+                          _context.next = 2;
+                          return (0, _gltfLoader.default)(scene, model);
 
-            v.controls = new _OrbitControls.OrbitControls(v.camera, canvas);
-            v.controls.update();
-            window.addEventListener('resize', v.requestRender);
-            v.controls.addEventListener('change', v.requestRender);
-            _context.next = 13;
-            return (0, _rgbeLoader.default)(v.renderer, v.scene, rgbe);
+                        case 2:
+                          objects = _context.sent;
+                          requestRender();
+                          return _context.abrupt("return", objects);
 
-          case 13:
-            _context.next = 15;
-            return (0, _gltfLoader.default)(v.scene, model);
-
-          case 15:
-            objects = _context.sent;
-            v.p = (0, _postProcessing.default)(v.renderer, v.scene, v.camera); //variable to determine wether a new frame needs to be rendered as there is no render loop
-
-            v.renderRequested = false; //render first frame as setup is finished
-
-            v.requestRender();
-            console.log('initialized');
-            return _context.abrupt("return", objects);
+                        case 5:
+                        case "end":
+                          return _context.stop();
+                      }
+                    }
+                  }, _callee);
+                }))();
+              }
+            });
 
           case 21:
           case "end":
-            return _context.stop();
+            return _context2.stop();
         }
       }
-    }, _callee);
-  })), v.resizeRendererToDisplaySize = function () {
-    var canvas = v.renderer.domElement;
-    var pixelRatio = window.devicePixelRatio;
-    var width = canvas.clientWidth * pixelRatio | 0;
-    var height = canvas.clientHeight * pixelRatio | 0;
-    var needResize = canvas.width !== width || canvas.height !== height;
+    }, _callee2);
+  }));
 
-    if (needResize) {
-      v.renderer.setSize(width, height, false);
-      v.p.resizeComposer(width, height);
-    }
-
-    return needResize;
-  }, v.render = function () {
-    v.renderRequested = false;
-
-    if (v.resizeRendererToDisplaySize()) {
-      v.camera.aspect = canvas.clientWidth / canvas.clientHeight;
-      v.camera.updateProjectionMatrix();
-    }
-
-    v.controls.update(); //v.renderer.render(v.scene, v.camera) --> use without post processing
-
-    v.p.renderComposer(v.scene, v.camera);
-  }, v.requestRender = function () {
-    if (!v.renderRequested) {
-      v.renderRequested = true;
-      requestAnimationFrame(v.render);
-    }
-  }, v.showOutline = function (object) {
-    /**
-     * recreate showOutlines() form postProcessing.js
-     * no need to pass down requestRender()
-     * no need to call requestRender() every time you use showOutlines()
-     * function for single object so the name makes sense and you don't have to wrap the object in an array
-     * function for multiple objects to minimize render requests
-     */
-    v.p.showOutlines([object]);
-    v.requestRender();
-  }, v.showOutlines = function (objects) {
-    v.p.showOutlines(objects);
-    v.requestRender();
-  }, v.hideOutlines = function () {
-    // no need for the ability to hide single objects as I don't need it
-    v.p.hideOutlines();
-    v.requestRender();
-  }, v.showObject = function (object) {
-    /**
-     * again two versions of the functions to have proper naming and minimize the render requests
-     * changing the layer instead of the visibility so the objects don't have to be drawn
-     * also handy for raycasters
-     */
-    object.layers.set(0);
-    object.children.forEach(function (x) {
-      x.layers.set(0);
-    });
-    v.requestRender();
-  }, v.showObjects = function (objects) {
-    object.forEach(function (x) {
-      //no need to make it recursive as the tree can't go deeper than 2 layers
-      x.layers.set(0);
-      x.chilren.forEach(function (y) {
-        y.layers.set(0);
-      });
-    });
-    v.requestRender();
-  }, v.hideObject = function (object) {
-    object.layers.set(1);
-    object.children.forEach(function (x) {
-      x.layers.set(1);
-    });
-    v.requestRender();
-  }, v.hideObjects = function (objects) {
-    objects.forEach(function (x) {
-      x.layers.set(1);
-      x.children.forEach(function (y) {
-        y.layers.set(1);
-      });
-    });
-  }, v.isVisible = function (object) {
-    /**
-     * not necessary
-     * you can use object.layers.mask but it is not 0 based even though object.layers.set() is so it is confusing
-     * object.visible always returns true because the visibility attribute doesn't change
-     */
-    return object.layers.mask === 1 ? true : false;
+  return function createViewport(_x, _x2, _x3) {
+    return _ref.apply(this, arguments);
   };
-  return v;
-};
+}();
 
 var _default = createViewport;
 exports.default = _default;
-},{"three":"../node_modules/three/build/three.module.js","three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","./rgbeLoader":"js/rgbeLoader.js","./gltfLoader":"js/gltfLoader.js","./postProcessing":"js/postProcessing.js"}],"assets/studio_small_03_1k.hdr":[function(require,module,exports) {
+},{"three":"../node_modules/three/build/three.module.js","three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","./hdrLoader":"js/hdrLoader.js","./gltfLoader":"js/gltfLoader.js","./postProcessing":"js/postProcessing.js"}],"assets/studio_small_03_1k.hdr":[function(require,module,exports) {
 module.exports = "/studio_small_03_1k.ca751594.hdr";
 },{}],"assets/test.glb":[function(require,module,exports) {
 module.exports = "/test.bd51df86.glb";
@@ -53836,17 +53799,18 @@ var main = /*#__PURE__*/function () {
         switch (_context.prev = _context.next) {
           case 0:
             canvas = document.querySelector('#canvas');
-            v = (0, _viewport.default)(canvas, _studio_small_03_1k.default, _test.default);
-            _context.next = 4;
-            return v.init();
+            _context.next = 3;
+            return (0, _viewport.default)(canvas, _studio_small_03_1k.default, _test.default);
 
-          case 4:
+          case 3:
+            v = _context.sent;
+            _context.next = 6;
+            return v.loadModel(_test.default);
+
+          case 6:
             objects = _context.sent;
-            v.showOutline(objects[2]);
-            v.hideObject(objects[1]);
-            console.log(v.isVisible(objects[1]));
 
-          case 8:
+          case 7:
           case "end":
             return _context.stop();
         }
@@ -53857,8 +53821,7 @@ var main = /*#__PURE__*/function () {
   return function main() {
     return _ref.apply(this, arguments);
   };
-}(); //change all factory functions to easier synatx!!!
-
+}();
 
 main();
 },{"regenerator-runtime/runtime":"../node_modules/regenerator-runtime/runtime.js","./scss/main.scss":"scss/main.scss","jquery":"../node_modules/jquery/dist/jquery.js","./js/viewport.js":"js/viewport.js","./assets/studio_small_03_1k.hdr":"assets/studio_small_03_1k.hdr","./assets/test.glb":"assets/test.glb"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
@@ -53889,7 +53852,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51504" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51073" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

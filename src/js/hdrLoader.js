@@ -7,13 +7,13 @@ import {
     RGBELoader
 } from 'three/examples/jsm/loaders/RGBELoader';
 
-export default function initRGBE(renderer, scene, rgbe) {
+export default function loadHDR(renderer, scene, hdr) {
     return new Promise((resolve, reject) => {
 
         new RGBELoader()
         .setDataType(UnsignedByteType)
         .load(
-            rgbe,
+            hdr,
             texture => {
                 const pmremGenerator = new PMREMGenerator(renderer);
                 pmremGenerator.compileEquirectangularShader();
