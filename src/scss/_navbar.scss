@@ -1,0 +1,14 @@
+@import "./variables";
+
+.nav-top {
+    z-index: 3;
+    position: fixed;
+    top: 0;
+    height: 3.5rem;
+    width: 100%;
+    background: #252525;
+    border-bottom: 2px solid #565656;
+    display: flex;
+    align-items: space-between;
+    justify-content: center;
+}

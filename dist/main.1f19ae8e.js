@@ -53785,7 +53785,7 @@ var createViewport = /*#__PURE__*/function () {
               },
 
               /**
-               * two versions of every function so the number of render requests is minimized 
+               * two versions of every function so the number of render requests is minimized
                */
               showObject: function showObject(obj) {
                 obj.layers.set(0);
@@ -53945,7 +53945,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51857" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54876" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

@@ -1,0 +1,8 @@
+@mixin center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+$bg-1: #121212;
+$bg-2: #252525;

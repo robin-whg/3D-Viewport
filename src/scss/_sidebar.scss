@@ -1,0 +1,34 @@
+.sidebar {
+    width: 0;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    background: #252525;
+    z-index: 2;
+    padding: 0 1rem;
+    .obj-btn {
+        background: blue;
+        font-size: 1.25rem;
+        padding: .5rem 1rem;
+        border-radius: 1rem;
+        margin: .5rem 0;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        img {
+            width: 2rem;
+            height: 2rem;
+        }
+    } 
+    .obj-btn:first-of-type {
+        margin-top: 4.5rem;
+    }
+}
+
+.sidebar-active {
+    width: 100%;
+    @include media-breakpoint-up(md) {
+        width: 350px
+    }
+}
