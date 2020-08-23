@@ -80,7 +80,7 @@ const createViewport = async (canvas, hdr, model) => {
             return obj.layers.mask === 1 ? true : false
         },
         /**
-         * two versions of every function so the number of render requests is minimized 
+         * two versions of every function so the number of render requests is minimized
          */
         showObject(obj) {
             obj.layers.set(0)
@@ -131,7 +131,7 @@ const createViewport = async (canvas, hdr, model) => {
         },
         clearOutlines() {
             p.clearOutlines(),
-            requestRender()
+                requestRender()
         }
     }
 }
