@@ -19,8 +19,12 @@ import {
 import {
     FXAAShader
 } from 'three/examples/jsm/shaders/FXAAShader.js';
-
-const createPostProcessing = (renderer, scene, camera) => {
+/**
+ * this is not gonna work with mulitple scenes that have postprocessing as outlinePass gets overwritten
+ * you would have to pass around the outlinepass object or maybe make custom events
+ */
+let outlinePass = {}
+export const createPostProcessing = (renderer, scene, camera) => {
     const size = renderer.getDrawingBufferSize(new Vector2());
     // create EffectComposer to add post processing effects to
     const composer = new EffectComposer(renderer);
@@ -28,7 +32,7 @@ const createPostProcessing = (renderer, scene, camera) => {
     const renderPass = new RenderPass(scene, camera);
     composer.addPass(renderPass);
     // create OutlinePass to highlight selected objects with an outline
-    const outlinePass = new OutlinePass(new Vector2(size.width, size.height), scene, camera)
+    outlinePass = new OutlinePass(new Vector2(size.width, size.height), scene, camera)
     outlinePass.edgeStrength = 5;
     outlinePass.edgeThickness = 1;
     outlinePass.edgeGlow = 0.25;
@@ -47,23 +51,30 @@ const createPostProcessing = (renderer, scene, camera) => {
         resizeComposer(width, height) {
             composer.setSize(width, height, false);
             fxaaShader.uniforms['resolution'].value.set(1 / width, 1 / height);
-        },
-        showOutline(obj) {
-            outlinePass.selectedObjects.push(obj)
-        },
-        showOutlines(objs) {
-            outlinePass.selectedObjects.push(...objs)
-        },
-        hideOutline(obj) {
-            outlinePass.selectedObjects = outlinePass.selectedObjects.filter(x => x !== obj)
-        },
-        hideOutlines(objs) {
-            outlinePass.selectedObjects = outlinePass.selectedObjects.filter(x => !objs.includes(x))
-        },
-        clearOutlines() {
-            outlinePass.selectedObjects = []
         }
     }
 }
 
-export default createPostProcessing
+export function showOutline(obj) {
+    outlinePass.selectedObjects.push(obj) 
+    const event = new Event('renderEvent')
+    window.dispatchEvent(event)
+}
+
+export function showOutlines(objs) {
+    outlinePass.selectedObjects.push(...objs)
+}
+
+export function hideOutline(obj) {
+    outlinePass.selectedObjects = outlinePass.selectedObjects.filter(x => x !== obj)
+}
+
+export function hideOutlines(objs) {
+    outlinePass.selectedObjects = outlinePass.selectedObjects.filter(x => !objs.includes(x))
+}
+
+export function clearOutlines() {
+    outlinePass.selectedObjects = []
+    const event = new Event('renderEvent')
+    window.dispatchEvent(event)
+}

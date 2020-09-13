@@ -10176,7 +10176,7 @@ button.close {
 .sidebar .sidebar-inner {
   margin: 3.5rem 0.5rem;
   opacity: 0;
-  transition: opacity 0.25s;
+  transition: opacity 0.1s;
   overflow-x: hidden;
 }
 .sidebar .obj-btn {
@@ -10209,6 +10209,7 @@ button.close {
 }
 .sidebar-active .sidebar-inner {
   opacity: 1;
+  transition: opacity 2s;
 }
 
 * {

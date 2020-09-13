@@ -4,9 +4,9 @@ import {
 } from 'three/examples/jsm/controls/OrbitControls'
 import loadHDR from './hdrLoader'
 import loadGLTF from './gltfLoader'
-import createPostProcessing from './postProcessing'
+import { createPostProcessing } from './postProcessing'
 
-const createViewport = async (canvas, hdr, model) => {
+export const createViewport = async (canvas, hdr, model) => {
     const renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: true,
@@ -68,6 +68,9 @@ const createViewport = async (canvas, hdr, model) => {
     controls.addEventListener('change', requestRender)
     window.addEventListener('resize', requestRender)
 
+    //custom event listener triggered when new frame needs to be rendered
+    window.addEventListener('renderEvent', requestRender)
+
     requestRender()
 
     return {
@@ -75,65 +78,45 @@ const createViewport = async (canvas, hdr, model) => {
             const objects = await loadGLTF(scene, model)
             requestRender()
             return objects
-        },
-        isVisible(obj) {
-            return obj.layers.mask === 1 ? true : false
-        },
-        /**
-         * two versions of every function so the number of render requests is minimized
-         */
-        showObject(obj) {
-            obj.layers.set(0)
-            obj.children.forEach(x => x.layers.set(0))
-            requestRender()
-        },
-        showObjects(objs) {
-            objs.forEach(x => {
-                x.layers.set(0)
-                x.children.forEach(y => {
-                    y.layers.set(0)
-                })
-            })
-            requestRender()
-        },
-        hideObject(obj) {
-            obj.layers.set(1)
-            obj.children.forEach(x => x.layers.set(1))
-            requestRender()
-        },
-        hideObjects(objs) {
-            objs.forEach(x => {
-                x.layers.set(1)
-                x.children.forEach(y => {
-                    y.layers.set(1)
-                })
-            })
-            requestRender()
-        },
-        /**
-         * copy functions of postProcessing.js to add render requests to them
-         */
-        showOutline(obj) {
-            p.showOutline(obj)
-            requestRender()
-        },
-        showOutlines(objs) {
-            p.showOutlines(objs)
-            requestRender()
-        },
-        hideOutline(obj) {
-            p.hideOutline(obj)
-            requestRender()
-        },
-        hideOutlines(objs) {
-            p.hideOutlines(objs)
-            requestRender()
-        },
-        clearOutlines() {
-            p.clearOutlines(),
-                requestRender()
         }
     }
 }
 
-export default createViewport
+/**
+ * two versions of every function so the number of render requests is minimized
+ */
+export function isVisible(obj) {
+    return obj.layers.mask === 1 ? true : false
+}
+export function showObject(obj) {
+    obj.layers.set(0)
+    obj.children.forEach(x => x.layers.set(0))
+    const event = new Event('renderEvent')
+    window.dispatchEvent(event)
+}
+export function showObjects(objs) {
+    objs.forEach(x => {
+        x.layers.set(0)
+        x.children.forEach(y => {
+            y.layers.set(0)
+        })
+    })
+    const event = new Event('renderEvent')
+    window.dispatchEvent(event)
+}
+export function hideObject(obj) {
+    obj.layers.set(1)
+    obj.children.forEach(x => x.layers.set(1))
+    const event = new Event('renderEvent')
+    window.dispatchEvent(event)
+}
+export function hideObjects(objs) {
+    objs.forEach(x => {
+        x.layers.set(1)
+        x.children.forEach(y => {
+            y.layers.set(1)
+        })
+    })
+    const event = new Event('renderEvent')
+    window.dispatchEvent(event)
+}

@@ -42494,7 +42494,12 @@ exports.FXAAShader = FXAAShader;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
+exports.showOutline = showOutline;
+exports.showOutlines = showOutlines;
+exports.hideOutline = hideOutline;
+exports.hideOutlines = hideOutlines;
+exports.clearOutlines = clearOutlines;
+exports.createPostProcessing = void 0;
 
 var _three = require("three");
 
@@ -42522,6 +42527,12 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToAr
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
+/**
+ * this is not gonna work with mulitple scenes that have postprocessing as outlinePass gets overwritten
+ * you would have to pass around the outlinepass object or maybe make custom events
+ */
+var outlinePass = {};
+
 var createPostProcessing = function createPostProcessing(renderer, scene, camera) {
   var size = renderer.getDrawingBufferSize(new _three.Vector2()); // create EffectComposer to add post processing effects to
 
@@ -42530,7 +42541,7 @@ var createPostProcessing = function createPostProcessing(renderer, scene, camera
   var renderPass = new _RenderPass.RenderPass(scene, camera);
   composer.addPass(renderPass); // create OutlinePass to highlight selected objects with an outline
 
-  var outlinePass = new _OutlinePass.OutlinePass(new _three.Vector2(size.width, size.height), scene, camera);
+  outlinePass = new _OutlinePass.OutlinePass(new _three.Vector2(size.width, size.height), scene, camera);
   outlinePass.edgeStrength = 5;
   outlinePass.edgeThickness = 1;
   outlinePass.edgeGlow = 0.25;
@@ -42548,40 +42559,53 @@ var createPostProcessing = function createPostProcessing(renderer, scene, camera
     resizeComposer: function resizeComposer(width, height) {
       composer.setSize(width, height, false);
       fxaaShader.uniforms['resolution'].value.set(1 / width, 1 / height);
-    },
-    showOutline: function showOutline(obj) {
-      outlinePass.selectedObjects.push(obj);
-    },
-    showOutlines: function showOutlines(objs) {
-      var _outlinePass$selected;
-
-      (_outlinePass$selected = outlinePass.selectedObjects).push.apply(_outlinePass$selected, _toConsumableArray(objs));
-    },
-    hideOutline: function hideOutline(obj) {
-      outlinePass.selectedObjects = outlinePass.selectedObjects.filter(function (x) {
-        return x !== obj;
-      });
-    },
-    hideOutlines: function hideOutlines(objs) {
-      outlinePass.selectedObjects = outlinePass.selectedObjects.filter(function (x) {
-        return !objs.includes(x);
-      });
-    },
-    clearOutlines: function clearOutlines() {
-      outlinePass.selectedObjects = [];
     }
   };
 };
 
-var _default = createPostProcessing;
-exports.default = _default;
+exports.createPostProcessing = createPostProcessing;
+
+function showOutline(obj) {
+  outlinePass.selectedObjects.push(obj);
+  var event = new Event('renderEvent');
+  window.dispatchEvent(event);
+}
+
+function showOutlines(objs) {
+  var _outlinePass$selected;
+
+  (_outlinePass$selected = outlinePass.selectedObjects).push.apply(_outlinePass$selected, _toConsumableArray(objs));
+}
+
+function hideOutline(obj) {
+  outlinePass.selectedObjects = outlinePass.selectedObjects.filter(function (x) {
+    return x !== obj;
+  });
+}
+
+function hideOutlines(objs) {
+  outlinePass.selectedObjects = outlinePass.selectedObjects.filter(function (x) {
+    return !objs.includes(x);
+  });
+}
+
+function clearOutlines() {
+  outlinePass.selectedObjects = [];
+  var event = new Event('renderEvent');
+  window.dispatchEvent(event);
+}
 },{"three":"../node_modules/three/build/three.module.js","three/examples/jsm/postprocessing/EffectComposer.js":"../node_modules/three/examples/jsm/postprocessing/EffectComposer.js","three/examples/jsm/postprocessing/RenderPass.js":"../node_modules/three/examples/jsm/postprocessing/RenderPass.js","three/examples/jsm/postprocessing/ShaderPass.js":"../node_modules/three/examples/jsm/postprocessing/ShaderPass.js","three/examples/jsm/shaders/CopyShader.js":"../node_modules/three/examples/jsm/shaders/CopyShader.js","three/examples/jsm/postprocessing/OutlinePass.js":"../node_modules/three/examples/jsm/postprocessing/OutlinePass.js","three/examples/jsm/shaders/FXAAShader.js":"../node_modules/three/examples/jsm/shaders/FXAAShader.js"}],"js/viewport.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
+exports.isVisible = isVisible;
+exports.showObject = showObject;
+exports.showObjects = showObjects;
+exports.hideObject = hideObject;
+exports.hideObjects = hideObjects;
+exports.createViewport = void 0;
 
 var THREE = _interopRequireWildcard(require("three"));
 
@@ -42591,7 +42615,7 @@ var _hdrLoader = _interopRequireDefault(require("./hdrLoader"));
 
 var _gltfLoader = _interopRequireDefault(require("./gltfLoader"));
 
-var _postProcessing = _interopRequireDefault(require("./postProcessing"));
+var _postProcessing = require("./postProcessing");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -42665,10 +42689,12 @@ var createViewport = /*#__PURE__*/function () {
             return (0, _hdrLoader.default)(renderer, scene, hdr);
 
           case 16:
-            p = (0, _postProcessing.default)(renderer, scene, camera);
+            p = (0, _postProcessing.createPostProcessing)(renderer, scene, camera);
             renderRequested = false;
             controls.addEventListener('change', requestRender);
-            window.addEventListener('resize', requestRender);
+            window.addEventListener('resize', requestRender); //custom event listener triggered when new frame needs to be rendered
+
+            window.addEventListener('renderEvent', requestRender);
             requestRender();
             return _context2.abrupt("return", {
               loadModel: function loadModel(model) {
@@ -42693,72 +42719,10 @@ var createViewport = /*#__PURE__*/function () {
                     }
                   }, _callee);
                 }))();
-              },
-              isVisible: function isVisible(obj) {
-                return obj.layers.mask === 1 ? true : false;
-              },
-
-              /**
-               * two versions of every function so the number of render requests is minimized
-               */
-              showObject: function showObject(obj) {
-                obj.layers.set(0);
-                obj.children.forEach(function (x) {
-                  return x.layers.set(0);
-                });
-                requestRender();
-              },
-              showObjects: function showObjects(objs) {
-                objs.forEach(function (x) {
-                  x.layers.set(0);
-                  x.children.forEach(function (y) {
-                    y.layers.set(0);
-                  });
-                });
-                requestRender();
-              },
-              hideObject: function hideObject(obj) {
-                obj.layers.set(1);
-                obj.children.forEach(function (x) {
-                  return x.layers.set(1);
-                });
-                requestRender();
-              },
-              hideObjects: function hideObjects(objs) {
-                objs.forEach(function (x) {
-                  x.layers.set(1);
-                  x.children.forEach(function (y) {
-                    y.layers.set(1);
-                  });
-                });
-                requestRender();
-              },
-
-              /**
-               * copy functions of postProcessing.js to add render requests to them
-               */
-              showOutline: function showOutline(obj) {
-                p.showOutline(obj);
-                requestRender();
-              },
-              showOutlines: function showOutlines(objs) {
-                p.showOutlines(objs);
-                requestRender();
-              },
-              hideOutline: function hideOutline(obj) {
-                p.hideOutline(obj);
-                requestRender();
-              },
-              hideOutlines: function hideOutlines(objs) {
-                p.hideOutlines(objs);
-                requestRender();
-              },
-              clearOutlines: function clearOutlines() {
-                p.clearOutlines(), requestRender();
               }
             });
 
-          case 22:
+          case 23:
           case "end":
             return _context2.stop();
         }
@@ -42770,9 +42734,56 @@ var createViewport = /*#__PURE__*/function () {
     return _ref.apply(this, arguments);
   };
 }();
+/**
+ * two versions of every function so the number of render requests is minimized
+ */
 
-var _default = createViewport;
-exports.default = _default;
+
+exports.createViewport = createViewport;
+
+function isVisible(obj) {
+  return obj.layers.mask === 1 ? true : false;
+}
+
+function showObject(obj) {
+  obj.layers.set(0);
+  obj.children.forEach(function (x) {
+    return x.layers.set(0);
+  });
+  var event = new Event('renderEvent');
+  window.dispatchEvent(event);
+}
+
+function showObjects(objs) {
+  objs.forEach(function (x) {
+    x.layers.set(0);
+    x.children.forEach(function (y) {
+      y.layers.set(0);
+    });
+  });
+  var event = new Event('renderEvent');
+  window.dispatchEvent(event);
+}
+
+function hideObject(obj) {
+  obj.layers.set(1);
+  obj.children.forEach(function (x) {
+    return x.layers.set(1);
+  });
+  var event = new Event('renderEvent');
+  window.dispatchEvent(event);
+}
+
+function hideObjects(objs) {
+  objs.forEach(function (x) {
+    x.layers.set(1);
+    x.children.forEach(function (y) {
+      y.layers.set(1);
+    });
+  });
+  var event = new Event('renderEvent');
+  window.dispatchEvent(event);
+}
 },{"three":"../node_modules/three/build/three.module.js","three/examples/jsm/controls/OrbitControls":"../node_modules/three/examples/jsm/controls/OrbitControls.js","./hdrLoader":"js/hdrLoader.js","./gltfLoader":"js/gltfLoader.js","./postProcessing":"js/postProcessing.js"}],"js/sidebar.js":[function(require,module,exports) {
 "use strict";
 
@@ -42781,61 +42792,93 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _main = require("../main.js");
+var _viewport = require("./viewport.js");
+
+var _postProcessing = require("./postProcessing.js");
+
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
 function createSidebar(objects) {
   var btn = document.getElementById("sidebar-btn");
-  btn.addEventListener('click', onClick);
+  btn.addEventListener('click', sidebarToggle);
   objects.forEach(function (x) {
     return createObjBtn(x);
+  }); //for some reason you can't add the eventlistener in createObjBtn. Maybe the buttons aren't created yet?
+
+  var children = _toConsumableArray(document.getElementById('sidebar-inner').children);
+
+  children.forEach(function (x, i) {
+    return createEventListener(x, objects[i]);
   });
 }
 
-function onClick() {
+function sidebarToggle() {
   var sidebar = document.getElementById("sidebar");
   sidebar.classList.contains('sidebar-active') ? sidebar.classList.remove('sidebar-active') : sidebar.classList.add('sidebar-active');
 }
 
 function createObjBtn(obj) {
   document.getElementById('sidebar-inner').innerHTML += getObjBtnBoilerplate(obj);
-  console.log(document.getElementById(obj.uuid));
-  createEventListener(obj); //only the last btn is working
 }
 
-function createEventListener(obj) {
-  document.getElementById(obj.uuid).addEventListener('click', function () {
-    return toggleVisibility(obj);
+function createEventListener(btn, obj) {
+  btn.addEventListener('click', function () {
+    var icon = this.children[1];
+
+    if ((0, _viewport.isVisible)(obj)) {
+      (0, _viewport.hideObject)(obj);
+      icon.innerHTML = getEyeSlashIcon();
+    } else {
+      (0, _viewport.showObject)(obj);
+      icon.innerHTML = getEyeIcon();
+    }
+  });
+  btn.addEventListener('mouseenter', function () {
+    console.log('enter');
+    (0, _postProcessing.showOutline)(obj);
+  });
+  btn.addEventListener('mouseleave', function () {
+    console.log('leave');
+    (0, _postProcessing.clearOutlines)();
   });
 }
 
 function getObjBtnBoilerplate(obj) {
-  return "\n            <div id=\"".concat(obj.uuid, "\" class=\"obj-btn\">\n                <span>").concat(obj.name, "</span>\n                <svg width=\"1em\" height=\"1em\" viewBox=\"0 0 16 16\" class=\"bi bi-eye\" fill=\"currentColor\"\n                    xmlns=\"http://www.w3.org/2000/svg\">\n                    <path fill-rule=\"evenodd\"\n                        d=\"M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.134 13.134 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5c2.12 0 3.879-1.168 5.168-2.457A13.134 13.134 0 0 0 14.828 8a13.133 13.133 0 0 0-1.66-2.043C11.879 4.668 10.119 3.5 8 3.5c-2.12 0-3.879 1.168-5.168 2.457A13.133 13.133 0 0 0 1.172 8z\" />\n                    <path fill-rule=\"evenodd\"\n                        d=\"M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z\" />\n                </svg>\n            </div>");
+  return "\n            <div id=\"".concat(obj.uuid, "\" class=\"obj-btn\">\n                <span>").concat(obj.name, "</span>\n                <div>\n                    <svg width=\"1em\" height=\"1em\" viewBox=\"0 0 16 16\" class=\"bi bi-eye icon\" fill=\"currentColor\"\n                        xmlns=\"http://www.w3.org/2000/svg\">\n                        <path fill-rule=\"evenodd\"\n                            d=\"M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.134 13.134 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5c2.12 0 3.879-1.168 5.168-2.457A13.134 13.134 0 0 0 14.828 8a13.133 13.133 0 0 0-1.66-2.043C11.879 4.668 10.119 3.5 8 3.5c-2.12 0-3.879 1.168-5.168 2.457A13.133 13.133 0 0 0 1.172 8z\" />\n                        <path fill-rule=\"evenodd\"\n                            d=\"M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z\" />\n                    </svg>\n                </div>\n            </div>");
 }
 
-function toggleVisibility(obj) {
-  console.log('toggle');
-  _main.v.isVisible(obj) ? _main.v.hideObject(obj) : _main.v.showObject(obj);
+function getEyeSlashIcon() {
+  return "<svg width=\"1em\" height=\"1em\" viewBox=\"0 0 16 16\" class=\"bi bi-eye-slash\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\">\n    <path d=\"M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z\"/>\n    <path d=\"M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299l.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z\"/>\n    <path d=\"M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709z\"/>\n    <path fill-rule=\"evenodd\" d=\"M13.646 14.354l-12-12 .708-.708 12 12-.708.708z\"/>\n  </svg>";
+}
+
+function getEyeIcon() {
+  return "<svg width=\"1em\" height=\"1em\" viewBox=\"0 0 16 16\" class=\"bi bi-eye\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\">\n    <path fill-rule=\"evenodd\" d=\"M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.134 13.134 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5c2.12 0 3.879-1.168 5.168-2.457A13.134 13.134 0 0 0 14.828 8a13.133 13.133 0 0 0-1.66-2.043C11.879 4.668 10.119 3.5 8 3.5c-2.12 0-3.879 1.168-5.168 2.457A13.133 13.133 0 0 0 1.172 8z\"/>\n    <path fill-rule=\"evenodd\" d=\"M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z\"/>\n  </svg>";
 }
 
 var _default = createSidebar;
 exports.default = _default;
-},{"../main.js":"main.js"}],"assets/studio_small_03_1k.hdr":[function(require,module,exports) {
+},{"./viewport.js":"js/viewport.js","./postProcessing.js":"js/postProcessing.js"}],"assets/studio_small_03_1k.hdr":[function(require,module,exports) {
 module.exports = "/studio_small_03_1k.ca751594.hdr";
 },{}],"assets/test.glb":[function(require,module,exports) {
 module.exports = "/test.bd51df86.glb";
 },{}],"main.js":[function(require,module,exports) {
 "use strict";
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.v = void 0;
-
 require("regenerator-runtime/runtime");
 
 require("./scss/main.scss");
 
-var _viewport = _interopRequireDefault(require("./js/viewport.js"));
+var _viewport = require("./js/viewport.js");
 
 var _sidebar = _interopRequireDefault(require("./js/sidebar.js"));
 
@@ -42849,22 +42892,19 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-var v = {};
-exports.v = v;
-
 var main = /*#__PURE__*/function () {
   var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-    var canvas, objects;
+    var canvas, v, objects;
     return regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
             canvas = document.querySelector('#canvas');
             _context.next = 3;
-            return (0, _viewport.default)(canvas, _studio_small_03_1k.default, _test.default);
+            return (0, _viewport.createViewport)(canvas, _studio_small_03_1k.default, _test.default);
 
           case 3:
-            exports.v = v = _context.sent;
+            v = _context.sent;
             _context.next = 6;
             return v.loadModel(_test.default);
 
@@ -42914,7 +42954,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49964" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51344" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
