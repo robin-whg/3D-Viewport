@@ -10135,31 +10135,33 @@ button.close {
   z-index: 3;
   position: fixed;
   top: 0;
-  height: 3.5rem;
+  height: 3rem;
   width: 100%;
   background: #252525;
-  border-bottom: 2px solid #565656;
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 1.5rem;
-  padding: 0 1rem;
+  padding: 0.75rem;
+  user-select: none;
   font-weight: 200;
 }
 .nav-top .btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 2.5rem;
-  width: 2.5rem;
   padding: 0.5rem;
+  width: 3rem;
+  height: 2rem;
+  color: #565656;
 }
 .nav-top .btn:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 .nav-top .btn svg {
-  height: 2rem;
-  width: 2rem;
+  color: #565656;
+  height: 1.25rem;
+  width: 1.25rem;
 }
 
 .sidebar {
@@ -10169,25 +10171,32 @@ button.close {
   left: 0;
   background: #252525;
   z-index: 2;
-  padding: 0 1rem;
+  transition: all 0.5s;
+}
+.sidebar .sidebar-inner {
+  margin: 3.5rem 0.5rem;
+  opacity: 0;
+  transition: opacity 0.25s;
+  overflow-x: hidden;
 }
 .sidebar .obj-btn {
-  background: blue;
-  font-size: 1.25rem;
-  padding: 0.5rem 1rem;
-  border-radius: 1rem;
-  margin: 0.5rem 0;
+  font-size: 1rem;
+  padding: 0.25rem 1rem;
+  margin-bottom: 0.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+  user-select: none;
 }
-.sidebar .obj-btn img {
-  width: 2rem;
-  height: 2rem;
+.sidebar .obj-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
-.sidebar .obj-btn:first-of-type {
-  margin-top: 4.5rem;
+.sidebar .obj-btn svg {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .sidebar-active {
@@ -10195,8 +10204,11 @@ button.close {
 }
 @media (min-width: 768px) {
   .sidebar-active {
-    width: 350px;
+    width: 256px;
   }
+}
+.sidebar-active .sidebar-inner {
+  opacity: 1;
 }
 
 * {

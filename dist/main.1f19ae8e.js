@@ -42781,24 +42781,55 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-function createSidebar() {
-  console.log('1');
-  $("#sidebar").toggleClass("sidebar-active");
+var _main = require("../main.js");
+
+function createSidebar(objects) {
+  var btn = document.getElementById("sidebar-btn");
+  btn.addEventListener('click', onClick);
+  objects.forEach(function (x) {
+    return createObjBtn(x);
+  });
 }
 
-function sidebarClick() {
-  console.log('2');
-  $("#sidebar").toggleClass("sidebar-active");
+function onClick() {
+  var sidebar = document.getElementById("sidebar");
+  sidebar.classList.contains('sidebar-active') ? sidebar.classList.remove('sidebar-active') : sidebar.classList.add('sidebar-active');
+}
+
+function createObjBtn(obj) {
+  document.getElementById('sidebar-inner').innerHTML += getObjBtnBoilerplate(obj);
+  console.log(document.getElementById(obj.uuid));
+  createEventListener(obj); //only the last btn is working
+}
+
+function createEventListener(obj) {
+  document.getElementById(obj.uuid).addEventListener('click', function () {
+    return toggleVisibility(obj);
+  });
+}
+
+function getObjBtnBoilerplate(obj) {
+  return "\n            <div id=\"".concat(obj.uuid, "\" class=\"obj-btn\">\n                <span>").concat(obj.name, "</span>\n                <svg width=\"1em\" height=\"1em\" viewBox=\"0 0 16 16\" class=\"bi bi-eye\" fill=\"currentColor\"\n                    xmlns=\"http://www.w3.org/2000/svg\">\n                    <path fill-rule=\"evenodd\"\n                        d=\"M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.134 13.134 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5c2.12 0 3.879-1.168 5.168-2.457A13.134 13.134 0 0 0 14.828 8a13.133 13.133 0 0 0-1.66-2.043C11.879 4.668 10.119 3.5 8 3.5c-2.12 0-3.879 1.168-5.168 2.457A13.133 13.133 0 0 0 1.172 8z\" />\n                    <path fill-rule=\"evenodd\"\n                        d=\"M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z\" />\n                </svg>\n            </div>");
+}
+
+function toggleVisibility(obj) {
+  console.log('toggle');
+  _main.v.isVisible(obj) ? _main.v.hideObject(obj) : _main.v.showObject(obj);
 }
 
 var _default = createSidebar;
 exports.default = _default;
-},{}],"assets/studio_small_03_1k.hdr":[function(require,module,exports) {
+},{"../main.js":"main.js"}],"assets/studio_small_03_1k.hdr":[function(require,module,exports) {
 module.exports = "/studio_small_03_1k.ca751594.hdr";
 },{}],"assets/test.glb":[function(require,module,exports) {
 module.exports = "/test.bd51df86.glb";
 },{}],"main.js":[function(require,module,exports) {
 "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.v = void 0;
 
 require("regenerator-runtime/runtime");
 
@@ -42818,9 +42849,12 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
+var v = {};
+exports.v = v;
+
 var main = /*#__PURE__*/function () {
   var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-    var canvas, v, objects, e;
+    var canvas, objects;
     return regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
@@ -42830,20 +42864,15 @@ var main = /*#__PURE__*/function () {
             return (0, _viewport.default)(canvas, _studio_small_03_1k.default, _test.default);
 
           case 3:
-            v = _context.sent;
+            exports.v = v = _context.sent;
             _context.next = 6;
             return v.loadModel(_test.default);
 
           case 6:
             objects = _context.sent;
-            (0, _sidebar.default)();
-            e = $('#sidebar');
-            console.log(e);
-            $("#btn-sidebar").on("click", function () {
-              return console.log('test');
-            });
+            (0, _sidebar.default)(objects);
 
-          case 11:
+          case 8:
           case "end":
             return _context.stop();
         }
@@ -42885,7 +42914,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57583" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49964" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
