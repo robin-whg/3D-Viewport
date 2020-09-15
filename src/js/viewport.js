@@ -6,7 +6,7 @@ import loadHDR from './hdrLoader'
 import loadGLTF from './gltfLoader'
 import { createPostProcessing } from './postProcessing'
 
-export const createViewport = async (canvas, hdr, model) => {
+export const createViewport = async (canvas, hdr) => {
     const renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: true,
@@ -23,6 +23,7 @@ export const createViewport = async (canvas, hdr, model) => {
 
     const controls = new OrbitControls(camera, canvas)
     controls.enableDamping = true
+    controls.dampingFactor = 0.5
     controls.target.set(0, 0, 0)
     controls.update()
 

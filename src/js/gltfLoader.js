@@ -27,7 +27,14 @@ export default function loadGLTF(scene, gltf) {
                     resolve(objects);
                 },
                 xhr => {
-                    console.log(`Model ${Math.floor( xhr.loaded / xhr.total * 100 )}% loaded`);
+                    const progress = Math.floor( xhr.loaded / xhr.total * 100 )
+                    console.log(`Model ${progress}% loaded`);
+                    const event = new CustomEvent('loadingProgress', {
+                        detail: {
+                            progress
+                        }
+                    })
+                    window.dispatchEvent(event)
                 },
                 err => {
                     reject(new Error(err));

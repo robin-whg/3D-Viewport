@@ -38,11 +38,9 @@ function createEventListener(btn, obj) {
         }
     })
     btn.addEventListener('mouseenter', function() {
-        console.log('enter')
         showOutline(obj)
     })
     btn.addEventListener('mouseleave', function() {
-        console.log('leave')
         clearOutlines()
     })
 }

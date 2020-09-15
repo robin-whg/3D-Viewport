@@ -41465,7 +41465,14 @@ function loadGLTF(scene, gltf) {
       console.log(objects);
       resolve(objects);
     }, function (xhr) {
-      console.log("Model ".concat(Math.floor(xhr.loaded / xhr.total * 100), "% loaded"));
+      var progress = Math.floor(xhr.loaded / xhr.total * 100);
+      console.log("Model ".concat(progress, "% loaded"));
+      var event = new CustomEvent('loadingProgress', {
+        detail: {
+          progress: progress
+        }
+      });
+      window.dispatchEvent(event);
     }, function (err) {
       reject(new Error(err));
     });
@@ -42628,7 +42635,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
 var createViewport = /*#__PURE__*/function () {
-  var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(canvas, hdr, model) {
+  var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(canvas, hdr) {
     var renderer, scene, camera, controls, p, resizeRenderer, renderRequested, render, requestRender;
     return regeneratorRuntime.wrap(function _callee2$(_context2) {
       while (1) {
@@ -42683,12 +42690,13 @@ var createViewport = /*#__PURE__*/function () {
             camera.position.set(5, 5, 5);
             controls = new _OrbitControls.OrbitControls(camera, canvas);
             controls.enableDamping = true;
+            controls.dampingFactor = 0.5;
             controls.target.set(0, 0, 0);
             controls.update();
-            _context2.next = 16;
+            _context2.next = 17;
             return (0, _hdrLoader.default)(renderer, scene, hdr);
 
-          case 16:
+          case 17:
             p = (0, _postProcessing.createPostProcessing)(renderer, scene, camera);
             renderRequested = false;
             controls.addEventListener('change', requestRender);
@@ -42722,7 +42730,7 @@ var createViewport = /*#__PURE__*/function () {
               }
             });
 
-          case 23:
+          case 24:
           case "end":
             return _context2.stop();
         }
@@ -42730,7 +42738,7 @@ var createViewport = /*#__PURE__*/function () {
     }, _callee2);
   }));
 
-  return function createViewport(_x, _x2, _x3) {
+  return function createViewport(_x, _x2) {
     return _ref.apply(this, arguments);
   };
 }();
@@ -42844,11 +42852,9 @@ function createEventListener(btn, obj) {
     }
   });
   btn.addEventListener('mouseenter', function () {
-    console.log('enter');
     (0, _postProcessing.showOutline)(obj);
   });
   btn.addEventListener('mouseleave', function () {
-    console.log('leave');
     (0, _postProcessing.clearOutlines)();
   });
 }
@@ -42899,20 +42905,22 @@ var main = /*#__PURE__*/function () {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
+            displayProgress('loading-progress');
             canvas = document.querySelector('#canvas');
-            _context.next = 3;
-            return (0, _viewport.createViewport)(canvas, _studio_small_03_1k.default, _test.default);
+            _context.next = 4;
+            return (0, _viewport.createViewport)(canvas, _studio_small_03_1k.default);
 
-          case 3:
+          case 4:
             v = _context.sent;
-            _context.next = 6;
+            _context.next = 7;
             return v.loadModel(_test.default);
 
-          case 6:
+          case 7:
             objects = _context.sent;
             (0, _sidebar.default)(objects);
+            deleteLoadingScreen('loading-screen');
 
-          case 8:
+          case 10:
           case "end":
             return _context.stop();
         }
@@ -42924,6 +42932,23 @@ var main = /*#__PURE__*/function () {
     return _ref.apply(this, arguments);
   };
 }();
+
+function displayProgress(elem) {
+  var loadingProgess = document.getElementById(elem);
+  window.addEventListener('loadingProgress', function (e) {
+    loadingProgess.innerText = e.detail.progress + '%';
+  });
+}
+
+function deleteLoadingScreen(elem) {
+  var loadingScreen = document.getElementById('loading-screen');
+  setTimeout(function () {
+    loadingScreen.classList.add('loading-screen-inactive');
+  }, 1000);
+  setTimeout(function () {
+    loadingScreen.remove();
+  }, 2000);
+}
 
 main();
 },{"regenerator-runtime/runtime":"../node_modules/regenerator-runtime/runtime.js","./scss/main.scss":"scss/main.scss","./js/viewport.js":"js/viewport.js","./js/sidebar.js":"js/sidebar.js","./assets/studio_small_03_1k.hdr":"assets/studio_small_03_1k.hdr","./assets/test.glb":"assets/test.glb"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
@@ -42954,7 +42979,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51344" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54257" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

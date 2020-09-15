@@ -1,0 +1,19 @@
+@import "./variables";
+
+.loading-screen {
+    z-index: 100;
+    background: $bg-2;
+    @include center;
+    flex-direction: column;
+    div {
+        max-width: 512px;
+        a {
+            text-decoration: none;
+        }
+    }
+}
+
+.loading-screen-inactive {
+    opacity: 0;
+    transition: all 1s;
+}

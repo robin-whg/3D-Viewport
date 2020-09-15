@@ -2,12 +2,7 @@
 @import "../../node_modules/bootstrap/scss/bootstrap";
 @import "./navbar";
 @import "./sidebar";
-
-@mixin center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+@import "./loadingScreen";
 
 * {
     margin: 0;
@@ -16,10 +11,12 @@
     color: white;
 }
 
-#canvas, #start {
-    display: block;
+#canvas, #loading-screen {
     position: absolute;
     width: 100vw;
     height: 100vh;
+}
+
+#canvas {
     background-color: $bg-1;
 }

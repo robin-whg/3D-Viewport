@@ -10143,6 +10143,7 @@ button.close {
   justify-content: space-between;
   font-size: 1.5rem;
   padding: 0.75rem;
+  border-bottom: 1px solid #565656;
   user-select: none;
   font-weight: 200;
 }
@@ -10212,6 +10213,26 @@ button.close {
   transition: opacity 2s;
 }
 
+.loading-screen {
+  z-index: 100;
+  background: #252525;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.loading-screen div {
+  max-width: 512px;
+}
+.loading-screen div a {
+  text-decoration: none;
+}
+
+.loading-screen-inactive {
+  opacity: 0;
+  transition: all 1s;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -10219,11 +10240,13 @@ button.close {
   color: white;
 }
 
-#canvas, #start {
-  display: block;
+#canvas, #loading-screen {
   position: absolute;
   width: 100vw;
   height: 100vh;
+}
+
+#canvas {
   background-color: #121212;
 }
 
