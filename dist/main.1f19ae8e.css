@@ -1,4 +1,9 @@
 @charset "UTF-8";
+.btn:focus, .btn:active {
+  outline: none !important;
+  box-shadow: none;
+}
+
 /*!
  * Bootstrap v5.0.0-alpha1 (https://getbootstrap.com/)
  * Copyright 2011-2020 The Bootstrap Authors
@@ -10131,6 +10136,11 @@ button.close {
     display: inline-flex !important;
   }
 }
+.btn:focus, .btn:active {
+  outline: none !important;
+  box-shadow: none;
+}
+
 .nav-top {
   z-index: 3;
   position: fixed;
@@ -10211,6 +10221,11 @@ button.close {
 .sidebar-active .sidebar-inner {
   opacity: 1;
   transition: opacity 2s;
+}
+
+.btn:focus, .btn:active {
+  outline: none !important;
+  box-shadow: none;
 }
 
 .loading-screen {

@@ -14,11 +14,7 @@ A simple 3D Viewer made with Three.js. Hover over the object button in the sideb
 2. Modular
 3. ES6
 
-## TOFIX
-- [ ] mobile
-  - [ ] header not centered
-  - [ ] buttons stay selected
-  - [ ] loading manager to display actual progress and not only the one of the gltf file
-  - [ ] check if outline functions work as they should
-  - [ ] pick color theme and set vars
-  - [ ] backend
+## TODO
+- [ ] loading manager to display actual progress and not only the one of the gltf file
+- [ ] check if outline functions work as they should
+- [ ] pick color theme and set vars

@@ -10,3 +10,9 @@ $gray: #565656;
 $bg: rgb(255, 255, 255, 8%);
 
 $border-radius: .5rem;
+
+
+.btn:focus,.btn:active {
+    outline: none !important;
+    box-shadow: none;
+ }

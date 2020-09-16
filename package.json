@@ -5,12 +5,13 @@
   "main": "index.js",
   "scripts": {
     "serve": "parcel src/index.html",
-    "build": "parcel build src/index.html"
+    "build": "parcel build src/index.html && npm version patch"
   },
   "author": "robin-whg",
   "license": "ISC",
   "dependencies": {
     "bootstrap": "^5.0.0-alpha1",
+    "express": "^4.17.1",
     "three": "^0.118.3"
   },
   "devDependencies": {
