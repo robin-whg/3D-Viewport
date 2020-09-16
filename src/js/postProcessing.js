@@ -56,7 +56,7 @@ export const createPostProcessing = (renderer, scene, camera) => {
 }
 
 export function showOutline(obj) {
-    outlinePass.selectedObjects.push(obj) 
+    outlinePass.selectedObjects.push(obj)
     const event = new Event('renderEvent')
     window.dispatchEvent(event)
 }

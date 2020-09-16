@@ -41453,6 +41453,7 @@ var _DRACOLoader = require("three/examples/jsm/loaders/DRACOLoader");
 
 var _utils = require("./utils");
 
+// loader support drace compressed gltf files but not .drc files
 function loadGLTF(scene, gltf) {
   return new Promise(function (resolve, reject) {
     var dracoLoader = new _DRACOLoader.DRACOLoader();
@@ -41466,7 +41467,8 @@ function loadGLTF(scene, gltf) {
       resolve(objects);
     }, function (xhr) {
       var progress = Math.floor(xhr.loaded / xhr.total * 100);
-      console.log("Model ".concat(progress, "% loaded"));
+      console.log("Model ".concat(progress, "% loaded")); //emit event with the current loading progress
+
       var event = new CustomEvent('loadingProgress', {
         detail: {
           progress: progress
@@ -42657,12 +42659,13 @@ var createViewport = /*#__PURE__*/function () {
                 camera.updateProjectionMatrix();
               }
 
-              controls.update(); //renderer.render(scene, camera) for use without postprocessing
+              controls.update(); //renderer.render(scene, camera) --> use without postprocessing
 
               p.renderComposer();
             };
 
             resizeRenderer = function _resizeRenderer(renderer) {
+              //renderer and postprocessing composer get resized whenever the size of the canvas element changes
               var pixelRatio = window.devicePixelRatio;
               var width = canvas.clientWidth * pixelRatio | 0;
               var height = canvas.clientHeight * pixelRatio | 0;
@@ -42693,14 +42696,25 @@ var createViewport = /*#__PURE__*/function () {
             controls.dampingFactor = 0.5;
             controls.target.set(0, 0, 0);
             controls.update();
-            _context2.next = 17;
+            _context2.prev = 15;
+            _context2.next = 18;
             return (0, _hdrLoader.default)(renderer, scene, hdr);
 
-          case 17:
+          case 18:
+            _context2.next = 23;
+            break;
+
+          case 20:
+            _context2.prev = 20;
+            _context2.t0 = _context2["catch"](15);
+            alert("HDR could not be loaded: ".concat(_context2.t0));
+
+          case 23:
             p = (0, _postProcessing.createPostProcessing)(renderer, scene, camera);
+            // renderer has no continuous render loop. A new frame is rendered whenever when one of the event listeneres get called
             renderRequested = false;
             controls.addEventListener('change', requestRender);
-            window.addEventListener('resize', requestRender); //custom event listener triggered when new frame needs to be rendered
+            window.addEventListener('resize', requestRender); //custom event listener triggered when new frame needs to be rendered.
 
             window.addEventListener('renderEvent', requestRender);
             requestRender();
@@ -42712,30 +42726,36 @@ var createViewport = /*#__PURE__*/function () {
                     while (1) {
                       switch (_context.prev = _context.next) {
                         case 0:
-                          _context.next = 2;
+                          _context.prev = 0;
+                          _context.next = 3;
                           return (0, _gltfLoader.default)(scene, model);
 
-                        case 2:
+                        case 3:
                           objects = _context.sent;
                           requestRender();
                           return _context.abrupt("return", objects);
 
-                        case 5:
+                        case 8:
+                          _context.prev = 8;
+                          _context.t0 = _context["catch"](0);
+                          alert("Model file could not be loaded: ".concat(_context.t0));
+
+                        case 11:
                         case "end":
                           return _context.stop();
                       }
                     }
-                  }, _callee);
+                  }, _callee, null, [[0, 8]]);
                 }))();
               }
             });
 
-          case 24:
+          case 30:
           case "end":
             return _context2.stop();
         }
       }
-    }, _callee2);
+    }, _callee2, null, [[15, 20]]);
   }));
 
   return function createViewport(_x, _x2) {
@@ -42744,6 +42764,7 @@ var createViewport = /*#__PURE__*/function () {
 }();
 /**
  * two versions of every function so the number of render requests is minimized
+ * using layers instead of .visible. More effiecient. Invisble objects get detected by a raycaster - Objects on another layer do not
  */
 
 
@@ -42907,20 +42928,21 @@ var main = /*#__PURE__*/function () {
           case 0:
             displayProgress('loading-progress');
             canvas = document.querySelector('#canvas');
-            _context.next = 4;
+            canvasListeners(canvas);
+            _context.next = 5;
             return (0, _viewport.createViewport)(canvas, _studio_small_03_1k.default);
 
-          case 4:
+          case 5:
             v = _context.sent;
-            _context.next = 7;
+            _context.next = 8;
             return v.loadModel(_test.default);
 
-          case 7:
+          case 8:
             objects = _context.sent;
             (0, _sidebar.default)(objects);
             deleteLoadingScreen('loading-screen');
 
-          case 10:
+          case 11:
           case "end":
             return _context.stop();
         }
@@ -42933,7 +42955,17 @@ var main = /*#__PURE__*/function () {
   };
 }();
 
+function canvasListeners(elem) {
+  elem.addEventListener('mousedown', function () {
+    elem.style.cursor = 'grabbing';
+  });
+  elem.addEventListener('mouseup', function () {
+    elem.style.cursor = 'grab';
+  });
+}
+
 function displayProgress(elem) {
+  // catch event emitted in gltfLoader.js to display the loading progress
   var loadingProgess = document.getElementById(elem);
   window.addEventListener('loadingProgress', function (e) {
     loadingProgess.innerText = e.detail.progress + '%';
@@ -42941,6 +42973,7 @@ function displayProgress(elem) {
 }
 
 function deleteLoadingScreen(elem) {
+  // delete loading screen after fade out
   var loadingScreen = document.getElementById('loading-screen');
   setTimeout(function () {
     loadingScreen.classList.add('loading-screen-inactive');
@@ -42979,7 +43012,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54257" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56718" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

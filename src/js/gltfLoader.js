@@ -6,8 +6,11 @@ import {
     DRACOLoader
 } from 'three/examples/jsm/loaders/DRACOLoader';
 
-import { sortByName } from './utils'
+import {
+    sortByName
+} from './utils'
 
+// loader support drace compressed gltf files but not .drc files
 export default function loadGLTF(scene, gltf) {
     return new Promise((resolve, reject) => {
 
@@ -27,8 +30,9 @@ export default function loadGLTF(scene, gltf) {
                     resolve(objects);
                 },
                 xhr => {
-                    const progress = Math.floor( xhr.loaded / xhr.total * 100 )
+                    const progress = Math.floor(xhr.loaded / xhr.total * 100)
                     console.log(`Model ${progress}% loaded`);
+                    //emit event with the current loading progress
                     const event = new CustomEvent('loadingProgress', {
                         detail: {
                             progress

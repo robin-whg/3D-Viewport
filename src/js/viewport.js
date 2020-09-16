@@ -4,7 +4,9 @@ import {
 } from 'three/examples/jsm/controls/OrbitControls'
 import loadHDR from './hdrLoader'
 import loadGLTF from './gltfLoader'
-import { createPostProcessing } from './postProcessing'
+import {
+    createPostProcessing
+} from './postProcessing'
 
 export const createViewport = async (canvas, hdr) => {
     const renderer = new THREE.WebGLRenderer({
@@ -27,11 +29,16 @@ export const createViewport = async (canvas, hdr) => {
     controls.target.set(0, 0, 0)
     controls.update()
 
-    await loadHDR(renderer, scene, hdr)
+    try {
+        await loadHDR(renderer, scene, hdr)
+    } catch (error) {
+        alert(`HDR could not be loaded: ${ error }`)
+    }
 
     const p = createPostProcessing(renderer, scene, camera)
 
     function resizeRenderer(renderer) {
+        //renderer and postprocessing composer get resized whenever the size of the canvas element changes
         const pixelRatio = window.devicePixelRatio
         const width = canvas.clientWidth * pixelRatio | 0
         const height = canvas.clientHeight * pixelRatio | 0
@@ -43,6 +50,7 @@ export const createViewport = async (canvas, hdr) => {
         return needResize
     }
 
+    // renderer has no continuous render loop. A new frame is rendered whenever when one of the event listeneres get called
     let renderRequested = false
 
     function render() {
@@ -55,7 +63,7 @@ export const createViewport = async (canvas, hdr) => {
         }
 
         controls.update()
-        //renderer.render(scene, camera) for use without postprocessing
+        //renderer.render(scene, camera) --> use without postprocessing
         p.renderComposer()
     }
 
@@ -69,22 +77,27 @@ export const createViewport = async (canvas, hdr) => {
     controls.addEventListener('change', requestRender)
     window.addEventListener('resize', requestRender)
 
-    //custom event listener triggered when new frame needs to be rendered
+    //custom event listener triggered when new frame needs to be rendered.
     window.addEventListener('renderEvent', requestRender)
 
     requestRender()
 
     return {
         async loadModel(model) {
-            const objects = await loadGLTF(scene, model)
-            requestRender()
-            return objects
+            try {
+                const objects = await loadGLTF(scene, model)
+                requestRender()
+                return objects
+            } catch (error) {
+                alert(`Model file could not be loaded: ${error}`)
+            }
         }
     }
 }
 
 /**
  * two versions of every function so the number of render requests is minimized
+ * using layers instead of .visible. More effiecient. Invisble objects get detected by a raycaster - Objects on another layer do not
  */
 export function isVisible(obj) {
     return obj.layers.mask === 1 ? true : false

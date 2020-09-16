@@ -37,10 +37,10 @@ function createEventListener(btn, obj) {
             icon.innerHTML = getEyeIcon()
         }
     })
-    btn.addEventListener('mouseenter', function() {
+    btn.addEventListener('mouseenter', function () {
         showOutline(obj)
     })
-    btn.addEventListener('mouseleave', function() {
+    btn.addEventListener('mouseleave', function () {
         clearOutlines()
     })
 }
